@@ -47,6 +47,7 @@ mongoose.connect(mongo_uri, function(error) {
 
 const herm_Schema = new mongoose.Schema({
     nombre: String,
+    nombreOrigin: String,
     dia: String,
     salida: String,
     itinerario: Array
@@ -114,6 +115,16 @@ function buscarRecorrido(nombre) {
         }
     }
     return itinerario;
+}
+
+function parseNombre(nombre) {
+    let nom = '';
+    for (let i = 0; i < info_hermandades.length; i++) {
+        if (info_hermandades[i].nombre == nombre) {
+            nom = info_hermandades[i].nombreOrigin;
+        }
+    }
+    return nom;
 }
 
 // -----------------------------------
@@ -185,16 +196,16 @@ apiai
     .action('hermandad', function(message, resp, bot) {
         let nombre = resp.result.parameters.hermandad;
         if (encontrarHerm(nombre)) {
-            let respuesta = "Preguntas por la hermandad " + nombre;
+            let respuesta = "Preguntas por la hermandad " + parseNombre(nombre);
             bot.reply(message, {
-                text: '¿Que deseas saber de la hermandad ' + nombre + '?',
+                text: '¿Que deseas saber de la hermandad ' + parseNombre(nombre) + '?',
                 attachments: {
                     quick_replies: [{
-                        text: 'Hora de salida de ' + nombre,
-                        payload: 'Quiero saber la hora de salida de ' + nombre
+                        text: 'Hora de salida de ' + parseNombre(nombre),
+                        payload: 'Quiero saber la hora de salida de ' + parseNombre(nombre)
                     }, {
                         text: 'Recorrido',
-                        payload: 'Recorrido'
+                        payload: 'Quiero saber el recorrido de ' + parseNombre(nombre)
                     }]
                 }
             }, function() {});
@@ -207,14 +218,17 @@ apiai
         let nombre = resp.result.parameters.hermandad;
         if (encontrarHerm(nombre)) {
             let hora = encontrarHoraSalida(nombre);
-            let cont = "La hermandad " + nombre + ' sale el ' + buscarDiaProc(nombre) + ' a las ' + hora;
+            let cont = "La hermandad " + parseNombre(nombre) + ' sale el ' + buscarDiaProc(nombre) + ' a las ' + hora;
             bot.reply(message, cont);
             bot.reply(message, {
-                text: '¿Deseas saber más de la hermandad ' + nombre + '?' + ' ¿O quieres volver atrás?',
+                text: '¿Qué desea saber ahora?',
                 attachments: {
                     quick_replies: [{
-                        text: 'Quiero saber el recorrido de la hermandad ' + nombre,
-                        payload: 'Quiero saber el recorrido de la hermandad ' + nombre
+                        text: 'Quiero saber el recorrido de la hermandad ' + parseNombre(nombre),
+                        payload: 'Quiero saber el recorrido de la hermandad ' + parseNombre(nombre)
+                    }, {
+                        text: 'Quiero saber la hora de salida de otra hermandad',
+                        payload: 'Hora de salida de otra hermandad'
                     }, {
                         text: 'Atrás',
                         payload: 'Atrás'
@@ -234,8 +248,6 @@ apiai
             if (v_proc == null) {
                 bot.reply(message, "No hay procesiones");
             } else {
-                respuesta = "Estás preguntando por el " + dia_preg;
-                bot.reply(message, respuesta);
                 let proc = "";
                 for (let i = 0; i < v_proc.length; i++) {
                     proc = proc.concat(v_proc[i]);
@@ -244,9 +256,27 @@ apiai
                 }
                 proc = "Las Hermandades que procesionan el " + dia_preg + ": " + proc;
                 bot.reply(message, proc);
+                bot.reply(message, {
+                    text: '¿Deseas saber algo más?' + '¿O quieres volver atrás?',
+                    attachments: {
+                        quick_replies: [{
+                            text: 'Hora de salida',
+                            payload: 'Horarios'
+                        }, {
+                            text: 'Recorridos',
+                            payload: 'Recorridos'
+                        }, {
+                            text: 'Procesiones',
+                            payload: 'Procesiones'
+                        }, {
+                            text: 'Salir',
+                            payload: 'Deseo salir'
+                        }]
+                    }
+                }, function() {});
             }
         } else {
-            bot.reply(message, "Tienes que decirme el día por el que preguntas");
+            bot.reply(message, "Tienes que decirme el día por el que preguntas, por ejemplo: " + "<b>domingo de ramos</b>");
         }
     })
     .action('recorrido', function(message, resp, bot) {
@@ -262,7 +292,7 @@ apiai
         let responseText = resp.result.fulfillment.speech;
         let nombre = resp.result.parameters.hermandad;
         if (encontrarHerm(nombre)) {
-            let respuesta = "Preguntas por el recorrido de la hermandad " + nombre;
+            let respuesta = "Preguntas por el recorrido de la hermandad " + parseNombre(nombre);
             bot.reply(message, respuesta);
             let itinerario = [];
             itinerario = buscarRecorrido(nombre);
@@ -275,11 +305,14 @@ apiai
             let cont = "La hermandad " + nombre + ' tiene el siguiente recorrido: ' + recorrido;
             bot.reply(message, cont);
             bot.reply(message, {
-                text: '¿Deseas saber más de la hermandad ' + nombre + '?' + ' ¿O quieres volver atrás?',
+                text: '¿Qué desea saber ahora?',
                 attachments: {
                     quick_replies: [{
-                        text: 'Quiero saber la hora de salida de la hermandad ' + nombre,
-                        payload: 'Quiero saber la hora de salida de la hermandad ' + nombre
+                        text: 'Quiero saber la hora de salida de la hermandad ' + parseNombre(nombre),
+                        payload: 'Quiero saber la hora de salida de la hermandad ' + parseNombre(nombre)
+                    }, {
+                        text: 'Quiero saber el recorrido de otra hermandad',
+                        payload: 'Recorrido de otra hermandad'
                     }, {
                         text: 'Atrás',
                         payload: 'Atrás'
@@ -289,6 +322,30 @@ apiai
         } else {
             bot.reply(message, "No existe");
         }
+    })
+    .action('i_final', function(message, resp, bot) {
+        let responseText = resp.result.fulfillment.speech;
+        bot.reply(message, responseText);
+        bot.reply(message, {
+            text: '<h2>Bienvenido al bot de la Semana Santa de Córdoba</h2>' +
+                '<b>Puede preguntar por:</b><br><br>' +
+                'Hora de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
+                'Itinerario: <b>"recorrido de la Hermandad del Huerto"</b><br>' +
+                '¿Qué procesión ver hoy?: <b>"Hermandades del lunes santo"</b><br>' +
+                'O dejar que te guiemos pulsando en cualquiera de los dos botones: <br>',
+            attachments: {
+                quick_replies: [{
+                    text: 'Hora de salida',
+                    payload: 'Horarios'
+                }, {
+                    text: 'Recorridos',
+                    payload: 'Recorridos'
+                }, {
+                    text: 'Procesiones',
+                    payload: 'Procesiones'
+                }]
+            }
+        }, function() {});
     })
 
 var normalizedPath = require("path").join(__dirname, "skills");
