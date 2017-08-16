@@ -7,10 +7,11 @@ module.exports = function(controller) {
                 'Hora de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
                 'Itinerario: <b>"recorrido de la Hermandad del Huerto"</b><br>' +
                 '¿Qué procesión ver hoy?: <b>"Hermandades del lunes santo"</b><br>' +
-                'O dejar que te guiemos pulsando en cualquiera de los dos botones: <br>',
+                'También puede preguntarnos por una hermandad: <b>"Hermandad de la Vera-Cruz"</b><br>' +
+                'O dejar que te guiemos pulsando en cualquiera de los botones: <br>',
             attachments: {
                 quick_replies: [{
-                    text: 'Hora de salida',
+                    text: 'Horas de salida',
                     payload: 'Horarios'
                 }, {
                     text: 'Recorridos',
@@ -30,10 +31,11 @@ module.exports = function(controller) {
                 'Hora de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
                 'Itinerario: <b>"recorrido de la Hermandad del Huerto"</b><br>' +
                 '¿Qué procesión ver hoy?: <b>"Hermandades del lunes santo"</b><br>' +
-                'O dejar que te guiemos pulsando en cualquiera de los dos botones: <br>',
+                'También puede preguntarnos por una hermandad: <b>"Hermandad de la Vera-Cruz"</b><br>' +
+                'O dejar que te guiemos pulsando en cualquiera de los botones: <br>',
             attachments: {
                 quick_replies: [{
-                    text: 'Hora de salida',
+                    text: 'Horas de salida',
                     payload: 'Horarios'
                 }, {
                     text: 'Recorridos',
