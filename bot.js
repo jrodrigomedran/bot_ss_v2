@@ -67,6 +67,8 @@ db_herm.find({}, function(err, hermandades) {
     }
 });
 
+const SCORE_OK = 0.9;
+
 function encontrarHerm(nombre) {
     let esta = false;
     for (let i = 0; i < info_hermandades.length; i++) {
@@ -195,23 +197,29 @@ apiai
     })
     .action('hermandad', function(message, resp, bot) {
         let nombre = resp.result.parameters.hermandad;
-        if (encontrarHerm(nombre)) {
-            let respuesta = "Preguntas por la hermandad " + parseNombre(nombre);
-            bot.reply(message, {
-                text: '¿Que deseas saber de la hermandad ' + parseNombre(nombre) + '?',
-                attachments: {
-                    quick_replies: [{
-                        text: 'Hora de salida de ' + parseNombre(nombre),
-                        payload: 'Quiero saber la hora de salida de ' + parseNombre(nombre)
-                    }, {
-                        text: 'Recorrido de ' + parseNombre(nombre),
-                        payload: 'Quiero saber el recorrido de ' + parseNombre(nombre)
-                    }]
-                }
-            }, function() {});
+        let score = resp.result.score;
+        if (score > SCORE_OK) {
+            if (encontrarHerm(nombre)) {
+                let respuesta = "Preguntas por la hermandad " + parseNombre(nombre);
+                bot.reply(message, {
+                    text: '¿Que deseas saber de la hermandad ' + parseNombre(nombre) + '?',
+                    attachments: {
+                        quick_replies: [{
+                            text: 'Hora de salida de ' + parseNombre(nombre),
+                            payload: 'Quiero saber la hora de salida de ' + parseNombre(nombre)
+                        }, {
+                            text: 'Recorrido de ' + parseNombre(nombre),
+                            payload: 'Quiero saber el recorrido de ' + parseNombre(nombre)
+                        }]
+                    }
+                }, function() {});
+            } else {
+                bot.reply(message, "No existe");
+            }
         } else {
-            bot.reply(message, "No existe");
+            bot.reply(message, "No le entiendo, por favor, repita");
         }
+
     })
     .action('herm_hora', function(message, resp, bot) {
         let responseText = resp.result.fulfillment.speech;
