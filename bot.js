@@ -262,24 +262,32 @@ apiai
                     if (i != (v_proc.length - 1))
                         proc = proc.concat(", ");
                 }
-                proc = "Las Hermandades que procesionan el " + dia_preg + ": " + proc;
+                proc = "Las Hermandades que procesionan el " + dia_preg + " son las siguientes: ";
                 bot.reply(message, proc);
+                var vec = [];
+                for (let i = 0; i < v_proc.length; i++) { // Generación de botones dinámicamente
+                    let object = { text: '', payload: '' };
+                    object.text = v_proc[i];
+                    object.payload = "Quiero información sobre " + v_proc[i];
+                    vec.push(object);
+                }
                 bot.reply(message, {
-                    text: '¿Deseas saber algo más?' + '¿O quieres volver atrás?',
+                    text: 'Pinche sobre sus botones para obtener más información si lo desea',
                     attachments: {
-                        quick_replies: [{
-                            text: 'Hora de salida',
-                            payload: 'Horarios'
-                        }, {
-                            text: 'Recorridos',
-                            payload: 'Recorridos'
-                        }, {
-                            text: 'Procesiones',
-                            payload: 'Procesiones'
-                        }, {
-                            text: 'Salir',
-                            payload: 'Deseo salir'
-                        }]
+                        // quick_replies: [{
+                        //     text: 'Hora de salida',
+                        //     payload: 'Horarios'
+                        // }, {
+                        //     text: 'Recorridos',
+                        //     payload: 'Recorridos'
+                        // }, {
+                        //     text: 'Procesiones',
+                        //     payload: 'Procesiones'
+                        // }, {
+                        //     text: 'Salir',
+                        //     payload: 'Deseo salir'
+                        // }]
+                        quick_replies: vec
                     }
                 }, function() {});
             }
