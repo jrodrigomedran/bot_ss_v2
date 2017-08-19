@@ -67,8 +67,11 @@ db_herm.find({}, function(err, hermandades) {
     }
 });
 
+// Score mínimo para estar seguros de que el mensaje es fiable
 const SCORE_OK = 0.9;
 
+// Busca si la hermandad está en la BDD
+//      nombre: Hermandad a buscar
 function encontrarHerm(nombre) {
     let esta = false;
     for (let i = 0; i < info_hermandades.length; i++) {
@@ -79,6 +82,8 @@ function encontrarHerm(nombre) {
     return esta;
 }
 
+// Devuelve el día que sale una determinada hermandad
+//      nombre: Nombre de la Hermandad que queremos saber su día
 function buscarDiaProc(nombre) {
     let dia = "";
     for (let i = 0; i < info_hermandades.length; i++) {
@@ -89,6 +94,8 @@ function buscarDiaProc(nombre) {
     return dia;
 }
 
+// Devuelve la hora a la que sale una determinada hermandad
+//      nombre: Nombre de la Hermandad que queremos saber su hora
 function encontrarHoraSalida(nombre) {
     let hora = '';
     for (let i = 0; i < info_hermandades.length; i++) {
@@ -99,6 +106,8 @@ function encontrarHoraSalida(nombre) {
     return hora;
 }
 
+// Devuelve las procesiones de un determinado día
+//      dia: Dia que queremos saber que hermandades procesionan
 function buscaProcesiones(dia) {
     var proc = [];
     for (let i = 0; i < info_hermandades.length; i++) {
@@ -109,6 +118,8 @@ function buscaProcesiones(dia) {
     return proc;
 }
 
+// Devuelve el recorrido de una determinada hermandad
+//      nombre: Nombre de la Hermandad que queremos saber su recorrido
 function buscarRecorrido(nombre) {
     var itinerario = [];
     for (let i = 0; i < info_hermandades.length; i++) {
@@ -119,6 +130,8 @@ function buscarRecorrido(nombre) {
     return itinerario;
 }
 
+// Devuelve el nombre formateado de una determinada hermandad
+//      nombre: Nombre de la Hermandad que queremos formatear
 function parseNombre(nombre) {
     let nom = '';
     for (let i = 0; i < info_hermandades.length; i++) {
@@ -178,14 +191,77 @@ apiai.all(function(message, resp, bot) {
 });
 
 apiai
+// Intent de bienvenida
     .action('input.welcome', function(message, resp, bot) {
         let responseText = resp.result.fulfillment.speech;
         bot.reply(message, responseText);
     })
+    // Intent para capturas mensajes erróneos o que no sabemos procesar
     .action('input.unknown', function(message, resp, bot) {
         let responseText = resp.result.fulfillment.speech;
-        bot.reply(message, responseText);
+        let context = '';
+        if (!resp.result.contexts[0]) {
+            context = "Inicio";
+        } else {
+            context = resp.result.contexts[0].name;
+        }
+        let msg = '';
+        switch (context) {
+            case 'Inicio':
+                bot.reply(message, {
+                    text: '<h2>' + responseText + '</h2>' +
+                        '<b>No le hemos entendido, puede preguntar por:</b><br><br>' +
+                        'Hora de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
+                        'Itinerario: <b>"recorrido de la Hermandad del Huerto"</b><br>' +
+                        '¿Qué procesión ver hoy?: <b>"Hermandades del lunes santo"</b><br>' +
+                        'También puede preguntarnos por una hermandad: <b>"Hermandad de la Vera-Cruz"</b><br>' +
+                        'O dejar que te guiemos pulsando en cualquiera de los botones: <br>',
+                    attachments: {
+                        quick_replies: [{
+                            text: 'Horas de salida',
+                            payload: 'Horarios'
+                        }, {
+                            text: 'Recorridos',
+                            payload: 'Recorridos'
+                        }, {
+                            text: 'Procesiones',
+                            payload: 'Procesiones'
+                        }]
+                    }
+                }, function() {});
+                break;
+            case 'horario':
+                msg = '<h2>' + responseText + '</h2>' +
+                    '<b>Preguntas por la hora de salida de una hermandad, pero no te he entendido</b><br><br>' +
+                    'Prueba, por ejemplo, con: <b>"hora de salida de la Hermandad del Huerto"</b><br>' +
+                    'Para salir escriba <b>"Deseo Salir"</b><br>';
+                bot.reply(message, msg);
+                break;
+            case 'recorrido':
+                msg = '<h2>' + responseText + '</h2>' +
+                    '<b>Preguntas por el recorrido de una hermandad, pero no te he entendido</b><br><br>' +
+                    'Prueba, por ejemplo, con: <b>"pregunto por el recorrido de la Merced"</b><br>' +
+                    'Para salir y volver al principio escriba <b>"Deseo Salir"</b><br>';
+                bot.reply(message, msg);
+                break;
+            case 'hermandad':
+                msg = '<h2>' + responseText + '</h2>' +
+                    '<b>Preguntas por una hermandad, pero no te he entendido</b><br><br>' +
+                    'Prueba, por ejemplo, con: <b>"Hermandad del Rescatado"</b><br>' +
+                    'Para salir  y volver al principio escriba <b>"Deseo Salir"</b><br>';
+                bot.reply(message, msg);
+                break;
+            case 'info_dias':
+                msg = '<h2>' + responseText + '</h2>' +
+                    '<b>Estás preguntando por las procesiones de un determinado día, pero no te he entendido</b><br><br>' +
+                    'Prueba, por ejemplo, con: <b>"Miercoles Santo"</b><br>' +
+                    'Para salir  y volver al principio escriba <b>"Deseo Salir"</b><br>';
+                bot.reply(message, msg);
+                break;
+        }
+
     })
+    // Intent de horarios. Captura si preguntas por la hora de salida 
     .action('horario', function(message, resp, bot) {
         let herm = resp.result.contexts[0].parameters.hermandad;
         if ((herm != "") || (herm != "undefined")) {
@@ -195,32 +271,29 @@ apiai
             bot.reply(message, "¿Está preguntando por la hora de salida de la hermandad " + herm + "?");
         }
     })
+    // Intent de hermandad. Captura si preguntas por una hermandad, te muestra las opciones que existen
+    // para una hermandad, como saber hora de salida y su recorrido
     .action('hermandad', function(message, resp, bot) {
         let nombre = resp.result.parameters.hermandad;
-        let score = resp.result.score;
-        if (score > SCORE_OK) {
-            if (encontrarHerm(nombre)) {
-                let respuesta = "Preguntas por la hermandad " + parseNombre(nombre);
-                bot.reply(message, {
-                    text: '¿Que deseas saber de la hermandad ' + parseNombre(nombre) + '?',
-                    attachments: {
-                        quick_replies: [{
-                            text: 'Hora de salida de ' + parseNombre(nombre),
-                            payload: 'Quiero saber la hora de salida de ' + parseNombre(nombre)
-                        }, {
-                            text: 'Recorrido de ' + parseNombre(nombre),
-                            payload: 'Quiero saber el recorrido de ' + parseNombre(nombre)
-                        }]
-                    }
-                }, function() {});
-            } else {
-                bot.reply(message, "No existe");
-            }
+        if (encontrarHerm(nombre)) {
+            let respuesta = "Preguntas por la hermandad " + parseNombre(nombre);
+            bot.reply(message, {
+                text: '¿Que deseas saber de la hermandad ' + parseNombre(nombre) + '?',
+                attachments: {
+                    quick_replies: [{
+                        text: 'Hora de salida de ' + parseNombre(nombre),
+                        payload: 'Quiero saber la hora de salida de ' + parseNombre(nombre)
+                    }, {
+                        text: 'Recorrido de ' + parseNombre(nombre),
+                        payload: 'Quiero saber el recorrido de ' + parseNombre(nombre)
+                    }]
+                }
+            }, function() {});
         } else {
-            bot.reply(message, "No le entiendo, por favor, repita");
+            bot.reply(message, "No existe");
         }
-
     })
+    // Intent para responder con la hora de salida. 
     .action('herm_hora', function(message, resp, bot) {
         let responseText = resp.result.fulfillment.speech;
         let nombre = resp.result.parameters.hermandad;
@@ -248,6 +321,7 @@ apiai
         }
 
     })
+    // Intent para mostrar las hermandades que procesionan un determinado día 
     .action('info_dias', function(message, resp, bot) {
         let dia_preg = resp.result.parameters.dias;
         if (dia_preg != "") {
@@ -262,8 +336,6 @@ apiai
                     if (i != (v_proc.length - 1))
                         proc = proc.concat(", ");
                 }
-                proc = "Las Hermandades que procesionan el " + dia_preg + " son las siguientes: ";
-                bot.reply(message, proc);
                 var vec = [];
                 for (let i = 0; i < v_proc.length; i++) { // Generación de botones dinámicamente
                     let object = { text: '', payload: '' };
@@ -271,22 +343,20 @@ apiai
                     object.payload = "Quiero información sobre " + v_proc[i];
                     vec.push(object);
                 }
+                let textQuickReplies = '';
+                if (vec.length != 0) {
+                    proc = "Las Hermandades que procesionan el " + dia_preg + " son las siguientes: ";
+                    bot.reply(message, proc);
+                    textQuickReplies = 'Pinche sobre sus botones para obtener más información si lo desea, o pulse "Salir" para volver al inicio';
+                } else {
+                    proc = "No hay Hermandades que procesionen el " + dia_preg;
+                    bot.reply(message, proc);
+                    textQuickReplies = 'Para salir y volver al inicio pulse el botor "Salir"';
+                }
+                vec.push({ text: 'Salir', payload: 'Deseo salir' });
                 bot.reply(message, {
-                    text: 'Pinche sobre sus botones para obtener más información si lo desea',
+                    text: textQuickReplies,
                     attachments: {
-                        // quick_replies: [{
-                        //     text: 'Hora de salida',
-                        //     payload: 'Horarios'
-                        // }, {
-                        //     text: 'Recorridos',
-                        //     payload: 'Recorridos'
-                        // }, {
-                        //     text: 'Procesiones',
-                        //     payload: 'Procesiones'
-                        // }, {
-                        //     text: 'Salir',
-                        //     payload: 'Deseo salir'
-                        // }]
                         quick_replies: vec
                     }
                 }, function() {});
@@ -295,6 +365,7 @@ apiai
             bot.reply(message, "Tienes que decirme el día por el que preguntas, por ejemplo: " + "<b>domingo de ramos</b>");
         }
     })
+    // Intent para contestar cuando preguntas por el recorrido de una hermandad. 
     .action('recorrido', function(message, resp, bot) {
         let herm = resp.result.contexts[0].parameters.hermandad;
         if ((herm != "") || (herm != "undefined")) {
@@ -304,6 +375,7 @@ apiai
             bot.reply(message, "¿Está preguntando por el recorrido de la hermandad " + herm + "?");
         }
     })
+    // Intent para responder con el recorrido de una hermandad. 
     .action('herm_recorrido', function(message, resp, bot) {
         let responseText = resp.result.fulfillment.speech;
         let nombre = resp.result.parameters.hermandad;
@@ -339,6 +411,7 @@ apiai
             bot.reply(message, "No existe");
         }
     })
+    // Intent para finalizar para cuando se pulsa "Salir" en cualquiera de los botones que hay. 
     .action('i_final', function(message, resp, bot) {
         let responseText = resp.result.fulfillment.speech;
         bot.reply(message, responseText);
