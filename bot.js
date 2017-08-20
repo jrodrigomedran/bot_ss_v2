@@ -142,6 +142,31 @@ function parseNombre(nombre) {
     return nom;
 }
 
+function resetContexts(resp) {
+    est = "";
+    est2 = "";
+
+    var request = require('request');
+    var peticion = {
+        "query": "Borrado",
+        "sessionId": resp.sessionId,
+        "lang": "es",
+        "resetContexts": true
+    }
+    request({
+        url: "https://console.api.ai/api/query?v=20150910",
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer 4c127bf9cfd845edb2c29550717ca58a"
+        },
+        json: true,
+        body: peticion,
+    }, function(error, response, body) {
+        console.log(body);
+    });
+}
+
 // -----------------------------------
 
 var bot_options = {
@@ -414,6 +439,7 @@ apiai
     // Intent para finalizar para cuando se pulsa "Salir" en cualquiera de los botones que hay. 
     .action('i_final', function(message, resp, bot) {
         let responseText = resp.result.fulfillment.speech;
+        resetContexts(resp);
         bot.reply(message, responseText);
         bot.reply(message, {
             text: '<h2>Bienvenido al bot de la Semana Santa de Córdoba</h2>' +
