@@ -1,0 +1,10 @@
+Primero lanzar MONGO:
+
+	- Ir al directorio donde está C:/Program Files/MongoDB/....
+	- Ejecutar "mongod.exe"
+
+Después ir al directorio del bot y lanzar "node ."
+
+apia.ai
+
+El backup del agente del bot está en la carpeta de fuera

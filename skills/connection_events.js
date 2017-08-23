@@ -4,7 +4,7 @@ module.exports = function(controller) {
         bot.reply(message, {
             text: '<h2>Bienvenido al bot de la Semana Santa de Córdoba</h2>' +
                 '<b>Puede preguntar por:</b><br><br>' +
-                'Hora de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
+                'Hora y lugar de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
                 'Itinerario: <b>"recorrido de la Hermandad del Huerto"</b><br>' +
                 '¿Qué procesión ver hoy?: <b>"Hermandades del lunes santo"</b><br>' +
                 'También puede preguntarnos por una hermandad: <b>"Hermandad de la Vera-Cruz"</b><br>' +
@@ -28,7 +28,7 @@ module.exports = function(controller) {
         bot.reply(message, {
             text: '<h2>Bienvenido al bot de la Semana Santa de Córdoba</h2>' +
                 '<b>Puede preguntar por:</b><br><br>' +
-                'Hora de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
+                'Hora y lugar de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
                 'Itinerario: <b>"recorrido de la Hermandad del Huerto"</b><br>' +
                 '¿Qué procesión ver hoy?: <b>"Hermandades del lunes santo"</b><br>' +
                 'También puede preguntarnos por una hermandad: <b>"Hermandad de la Vera-Cruz"</b><br>' +

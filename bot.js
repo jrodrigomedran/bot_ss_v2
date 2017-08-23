@@ -49,6 +49,7 @@ const herm_Schema = new mongoose.Schema({
     nombre: String,
     nombreOrigin: String,
     dia: String,
+    parroquia: String,
     salida: String,
     itinerario: Array
 });
@@ -82,6 +83,37 @@ function encontrarHerm(nombre) {
     return esta;
 }
 
+function parseDia(dia) {
+    let pDia = '';
+    switch (dia) {
+        case 'domingo de ramos':
+            pDia = 'Domingo de Ramos';
+            break;
+        case 'lunes santo':
+            pDia = 'Lunes Santo';
+            break;
+        case 'martes santo':
+            pDia = 'Martes Santo';
+            break;
+        case 'miercoles santo':
+            pDia = 'Miércoles Santo';
+            break;
+        case 'jueves santo':
+            pDia = 'Jueves Santo';
+            break;
+        case 'viernes santo':
+            pDia = 'Viernes Santo';
+            break;
+        case 'sabado santo':
+            pDia = 'Sábado Santo';
+            break;
+        case 'domingo de resureccion':
+            pDia = 'Domingo de Resurección';
+            break;
+    }
+    return pDia;
+}
+
 // Devuelve el día que sale una determinada hermandad
 //      nombre: Nombre de la Hermandad que queremos saber su día
 function buscarDiaProc(nombre) {
@@ -91,6 +123,7 @@ function buscarDiaProc(nombre) {
             dia = info_hermandades[i].dia;
         }
     }
+    dia = parseDia(dia);
     return dia;
 }
 
@@ -104,6 +137,18 @@ function encontrarHoraSalida(nombre) {
         }
     }
     return hora;
+}
+
+// Devuelve la parroquia de la que sale una determinada hermandad
+//      nombre: Nombre de la Hermandad que queremos saber su parroquia
+function encontrarParroquia(nombre) {
+    let parr = '';
+    for (let i = 0; i < info_hermandades.length; i++) {
+        if (info_hermandades[i].nombre == nombre) {
+            parr = info_hermandades[i].parroquia;
+        }
+    }
+    return parr;
 }
 
 // Devuelve las procesiones de un determinado día
@@ -142,6 +187,7 @@ function parseNombre(nombre) {
     return nom;
 }
 
+// Resetea los contextos
 function resetContexts(resp) {
     est = "";
     est2 = "";
@@ -236,7 +282,7 @@ apiai
                 bot.reply(message, {
                     text: '<h2>' + responseText + '</h2>' +
                         '<b>No le hemos entendido, puede preguntar por:</b><br><br>' +
-                        'Hora de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
+                        'Hora y lugar de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
                         'Itinerario: <b>"recorrido de la Hermandad del Huerto"</b><br>' +
                         '¿Qué procesión ver hoy?: <b>"Hermandades del lunes santo"</b><br>' +
                         'También puede preguntarnos por una hermandad: <b>"Hermandad de la Vera-Cruz"</b><br>' +
@@ -315,6 +361,7 @@ apiai
                 }
             }, function() {});
         } else {
+            let res = 'La Hermandad por la que pregunta no existe o no la conocemos';
             bot.reply(message, "No existe");
         }
     })
@@ -324,10 +371,13 @@ apiai
         let nombre = resp.result.parameters.hermandad;
         if (encontrarHerm(nombre)) {
             let hora = encontrarHoraSalida(nombre);
-            let cont = "La hermandad " + parseNombre(nombre) + ' sale el ' + buscarDiaProc(nombre) + ' a las ' + hora;
-            bot.reply(message, cont);
+            let cont = "La Hermandad " + parseNombre(nombre) +
+                ' sale el ' + buscarDiaProc(nombre) +
+                ' a las ' + '<b>' + hora + 'h.' + '</b>' +
+                ' de la ' + encontrarParroquia(nombre);
             bot.reply(message, {
-                text: '¿Qué desea saber ahora?',
+                text: cont + '<br>' + '<br></br>' +
+                    '<i>' + '¿Deseas saber algo más?' + '</i>',
                 attachments: {
                     quick_replies: [{
                         text: 'Quiero saber el recorrido de la hermandad ' + parseNombre(nombre),
@@ -336,7 +386,7 @@ apiai
                         text: 'Quiero saber la hora de salida de otra hermandad',
                         payload: 'Hora de salida de otra hermandad'
                     }, {
-                        text: 'Atrás',
+                        text: 'No, deseo salir',
                         payload: 'Atrás'
                     }]
                 }
@@ -355,12 +405,6 @@ apiai
             if (v_proc == null) {
                 bot.reply(message, "No hay procesiones");
             } else {
-                let proc = "";
-                for (let i = 0; i < v_proc.length; i++) {
-                    proc = proc.concat(v_proc[i]);
-                    if (i != (v_proc.length - 1))
-                        proc = proc.concat(", ");
-                }
                 var vec = [];
                 for (let i = 0; i < v_proc.length; i++) { // Generación de botones dinámicamente
                     let object = { text: '', payload: '' };
@@ -370,11 +414,11 @@ apiai
                 }
                 let textQuickReplies = '';
                 if (vec.length != 0) {
-                    proc = "Las Hermandades que procesionan el " + dia_preg + " son las siguientes: ";
-                    bot.reply(message, proc);
-                    textQuickReplies = 'Pinche sobre sus botones para obtener más información si lo desea, o pulse "Salir" para volver al inicio';
+                    let proc = "Las Hermandades que procesionan el " + '<b>' + parseDia(dia_preg) + '</b>' + " son las siguientes: ";
+                    textQuickReplies = proc + '<br></br>' +
+                        '<br><i>' + 'Pinche sobre sus botones para obtener más información si lo desea, o pulse "Salir" para volver al inicio' + '</i></br>';
                 } else {
-                    proc = "No hay Hermandades que procesionen el " + dia_preg;
+                    proc = "No hay Hermandades que procesionen el " + parseDia(dia_preg);
                     bot.reply(message, proc);
                     textQuickReplies = 'Para salir y volver al inicio pulse el botor "Salir"';
                 }
@@ -405,8 +449,6 @@ apiai
         let responseText = resp.result.fulfillment.speech;
         let nombre = resp.result.parameters.hermandad;
         if (encontrarHerm(nombre)) {
-            let respuesta = "Preguntas por el recorrido de la hermandad " + parseNombre(nombre);
-            bot.reply(message, respuesta);
             let itinerario = [];
             itinerario = buscarRecorrido(nombre);
             let recorrido = "";
@@ -415,10 +457,10 @@ apiai
                 if (i != (itinerario.length - 1))
                     recorrido = recorrido.concat(", ");
             }
-            let cont = "La hermandad " + parseNombre(nombre) + ' tiene el siguiente recorrido: ' + recorrido;
-            bot.reply(message, cont);
+            let cont = "La Hermandad " + parseNombre(nombre) + ' tiene el siguiente recorrido: ' + recorrido;
+            // bot.reply(message, cont);
             bot.reply(message, {
-                text: '¿Qué desea saber ahora?',
+                text: cont + '<br>' + '<br></br>' + '<i>' + '¿Deseas saber algo más?' + '</i>' + '</br>',
                 attachments: {
                     quick_replies: [{
                         text: 'Quiero saber la hora de salida de la hermandad ' + parseNombre(nombre),
@@ -427,7 +469,7 @@ apiai
                         text: 'Quiero saber el recorrido de otra hermandad',
                         payload: 'Recorrido de otra hermandad'
                     }, {
-                        text: 'Atrás',
+                        text: 'No, deseo salir',
                         payload: 'Atrás'
                     }]
                 }
@@ -444,7 +486,7 @@ apiai
         bot.reply(message, {
             text: '<h2>Bienvenido al bot de la Semana Santa de Córdoba</h2>' +
                 '<b>Puede preguntar por:</b><br><br>' +
-                'Hora de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
+                'Hora y lugar de salida de una Hermandad: <b>"hora de salida del Rescatado"</b><br>' +
                 'Itinerario: <b>"recorrido de la Hermandad del Huerto"</b><br>' +
                 '¿Qué procesión ver hoy?: <b>"Hermandades del lunes santo"</b><br>' +
                 'También puede preguntarnos por una hermandad: <b>"Hermandad de la Vera-Cruz"</b><br>' +
